@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>飞机图片查询 · Aircraft Gallery</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="top-row">
+        <div class="brand">
+          <svg class="plane-icon" viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+            <path fill="currentColor" d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5L21 16z"/>
+          </svg>
+          <div>
+            <h1 data-i18n="brandTitle">飞机图片查询</h1>
+            <p class="subtitle" data-i18n="brandSub">按机型浏览客机资料与照片 · 支持上传投稿</p>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button class="lang-toggle" id="langToggle" type="button" title="切换语言">English</button>
+          <button class="dev-entry" id="devEntry" type="button" data-i18n="devEntry">开发者登录</button>
+        </div>
+      </div>
+
+      <nav class="main-nav" id="mainNav">
+        <button class="nav-btn active" data-view="home" type="button" data-i18n="navHome">主页</button>
+        <button class="nav-btn" data-view="upload" type="button" data-i18n="navUpload">上传图片</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ===== 主页：机型目录 ===== -->
+    <section id="view-home" class="view">
+      <div id="catalog" class="catalog"></div>
+    </section>
+
+    <!-- ===== 上传图片（原机库功能整合） ===== -->
+    <section id="view-upload" class="view" hidden>
+      <!-- 搜索栏：所有访客可见 -->
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" class="search-ico">
+          <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/>
+        </svg>
+        <input id="regSearch" type="text" name="q" data-i18n-ph="searchPh" placeholder="按飞机注册号或机型搜索，例如：B-1234、A330、N12345…" autocomplete="off" />
+        <button id="regClear" class="clear-btn" title="清除" aria-label="清除">×</button>
+      </div>
+
+      <!-- 开发者专属：三栏审核台（登录后显示） -->
+      <div class="dev-review" id="devReview" hidden>
+        <div class="result-bar">
+          <span id="hangarCount">共 0 张照片</span>
+        </div>
+        <section class="hangar-cols">
+          <div class="hangar-col" id="colPending">
+            <div class="col-head"><h3 data-i18n="colPending">待审核</h3><span class="col-count" id="cntPending">0</span></div>
+            <div class="grid col-grid" id="gridPending"></div>
+            <div class="col-empty" id="emptyPending" hidden><p data-i18n="noPendingCol">该分类下暂无照片</p></div>
+          </div>
+          <div class="hangar-col" id="colApproved">
+            <div class="col-head"><h3 data-i18n="colApproved">已通过</h3><span class="col-count" id="cntApproved">0</span></div>
+            <div class="grid col-grid" id="gridApproved"></div>
+            <div class="col-empty" id="emptyApproved" hidden><p data-i18n="noPendingCol">该分类下暂无照片</p></div>
+          </div>
+          <div class="hangar-col" id="colRejected">
+            <div class="col-head"><h3 data-i18n="colRejected">已拒绝</h3><span class="col-count" id="cntRejected">0</span></div>
+            <div class="grid col-grid" id="gridRejected"></div>
+            <div class="col-empty" id="emptyRejected" hidden><p data-i18n="noPendingCol">该分类下暂无照片</p></div>
+          </div>
+        </section>
+        <div id="hangarEmpty" class="empty" hidden>
+          <p data-i18n="hangarEmpty">还没有上传记录</p>
+        </div>
+        <div class="dev-bar" id="devBar" hidden>
+          <span class="dev-badge" data-i18n="devBadge">● 开发者模式</span>
+          <span class="dev-hint" data-i18n="devHint">审核访客上传的图片，通过后会进入「推荐图片」公开展示</span>
+          <button id="clearAllBtn" class="btn-ghost danger" type="button" data-i18n="clearAll">清空全部上传数据</button>
+          <button id="devLogout" class="btn-ghost" type="button" data-i18n="devLogout">退出开发者</button>
+        </div>
+        <div class="dev-upload" id="devUploader" hidden>
+          <div class="du-head" data-i18n="devUpHead">开发者直接上传 · 免审核立即公开</div>
+          <div class="dropzone" id="devDropzone" tabindex="0" role="button" aria-label="上传飞机照片">
+            <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" class="up-ico">
+              <path fill="currentColor" d="M19 13v6H5v-6H3v8h18v-8h-2zM11 3v9.17l-2.59-2.58L7 11l5 5 5-5-1.41-1.41L13 12.17V3h-2z"/>
+            </svg>
+            <p data-i18n="dropHint">点击或拖拽照片到此处上传</p>
+            <span class="hint" data-i18n="devDropNote">以开发者身份上传，将直接发布到「推荐图片」，无需审核</span>
+          </div>
+          <input type="file" id="devFileInput" accept="image/*" hidden />
+          <div class="upload-form" id="devUploadForm" hidden>
+            <div class="uf-row">
+              <label><span data-i18n="regLabel">注册号 *</span><input id="devRegInput" type="text" data-i18n-ph="phReg" placeholder="如 B-1234" /></label>
+              <label><span data-i18n="typeLabel">机型 *</span><input id="devTypeInput" type="text" data-i18n-ph="phType" placeholder="例如：A330-941neo" autocomplete="off" /></label>
+            </div>
+            <p class="uf-match" id="devMatch"></p>
+            <label class="uf-note"><span data-i18n="noteLabel">备注</span><input id="devNoteInput" type="text" data-i18n-ph="phNote" placeholder="选填，如 拍摄于上海浦东" /></label>
+            <div class="uf-actions">
+              <button id="devCancel" class="btn-ghost" type="button" data-i18n="cancel">取消</button>
+              <button id="devPublish" class="btn-primary" type="button" data-i18n="devPublish">直接发布（免审核）</button>
+            </div>
+            <p class="uf-tip" id="devUfTip"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 访客上传（提交审核） -->
+      <div class="uploader" id="uploader">
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="上传飞机照片">
+          <svg viewBox="0 0 24 24" width="40" height="40" aria-hidden="true" class="up-ico">
+            <path fill="currentColor" d="M19 13v6H5v-6H3v8h18v-8h-2zM11 3v9.17l-2.59-2.58L7 11l5 5 5-5-1.41-1.41L13 12.17V3h-2z"/>
+          </svg>
+          <p data-i18n="dropAircraft">点击或拖拽照片到此处上传飞机照片</p>
+          <span class="hint" data-i18n="upNote">支持 JPG / PNG，上传后需开发者审核通过才会公开</span>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" hidden />
+      </div>
+      <div class="upload-form" id="uploadForm" hidden>
+        <div class="uf-row">
+          <label><span data-i18n="regLabel">注册号 *</span><input id="regInput" type="text" data-i18n-ph="phReg" placeholder="如 B-1234" /></label>
+          <label><span data-i18n="typeLabel">机型 *</span><input id="typeInput" type="text" data-i18n-ph="phType" placeholder="例如：A330-941neo" autocomplete="off" /></label>
+        </div>
+        <p class="uf-match" id="ufMatch"></p>
+        <label class="uf-note"><span data-i18n="noteLabel">备注</span><input id="noteInput" type="text" data-i18n-ph="phNote" placeholder="选填，如 拍摄于上海浦东" /></label>
+        <div class="uf-actions">
+          <button id="cancelAdd" class="btn-ghost" type="button" data-i18n="cancel">取消</button>
+          <button id="addBtn" class="btn-primary" type="button" data-i18n="submitReview">提交审核</button>
+        </div>
+        <p class="uf-tip" id="ufTip"></p>
+      </div>
+
+      <!-- 推荐图片（所有访客可见） -->
+      <section id="recSection" class="panel-rec">
+        <div class="rec-head">
+          <h2 data-i18n="recTitle">推荐图片</h2>
+          <span id="recCount" class="rec-count">共 0 张推荐</span>
+          <span class="rec-sub" data-i18n="recSub">已通过审核的优质照片</span>
+        </div>
+        <div id="recGrid" class="grid"></div>
+        <div id="recEmpty" class="empty" hidden><p>还没有推荐的照片</p></div>
+      </section>
+    </section>
+
+    <!-- ===== 机型详情页（点击目录进入） ===== -->
+    <section id="view-detail" class="view" hidden>
+      <button class="back-btn" id="backBtn" type="button" data-i18n="back">← 返回机型列表</button>
+      <div class="detail-head">
+        <img id="dImg" class="detail-img" alt="" />
+        <div class="detail-meta">
+          <h2 id="dName"></h2>
+          <p id="dSub" class="m-sub"></p>
+          <p id="dDesc" class="m-desc"></p>
+          <a id="dWiki" class="wiki-link" target="_blank" rel="noopener" data-i18n="wikiLink">查看维基百科详情 →</a>
+        </div>
+      </div>
+
+      <h3 class="detail-sec-title" data-i18n="variantsTitle">子型号</h3>
+      <div id="dVariants" class="variants-grid"></div>
+
+      <h3 class="detail-sec-title" id="dPhotosTitle"></h3>
+      <div id="dGallery" class="grid"></div>
+      <div id="dGalleryEmpty" class="empty" hidden><p data-i18n="detailNoPhotos">该机型暂无已通过审核的照片</p></div>
+      <div class="pager" id="dPager" hidden>
+        <button id="dPrev" class="pager-btn" type="button" aria-label="上一页">←</button>
+        <span id="dPageInfo" class="pager-info"></span>
+        <button id="dNext" class="pager-btn" type="button" aria-label="下一页">→</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p data-i18n="footer">访客上传的飞机照片经开发者审核通过后，会在「推荐图片」中公开推荐展示，供大家浏览欣赏。</p>
+    <div class="safety" id="safety">本站已安全运行 <b id="safeDays">0</b> 天</div>
+  </footer>
+
+  <!-- 详情弹窗（照片详情） -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <button class="modal-close" data-close aria-label="关闭">×</button>
+      <div class="modal-img"><img id="mImg" alt="" /></div>
+      <div class="modal-body">
+        <div class="modal-head">
+          <h2 id="mName"></h2>
+          <span id="mCat" class="tag"></span>
+        </div>
+        <p id="mModel" class="m-model"></p>
+        <p id="mDesc" class="m-desc"></p>
+        <div id="mSpecs" class="specs"></div>
+        <div id="mUserPhotos" class="user-photos"></div>
+        <div id="mDevActions" class="m-dev-actions" hidden>
+          <button id="mReject" class="btn-ghost danger" type="button" data-i18n="mReject">不通过（移至已拒绝）</button>
+        </div>
+        <a id="mWiki" class="wiki-link" target="_blank" rel="noopener" data-i18n="wikiLink">查看维基百科详情 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 开发者登录弹窗（Supabase Auth） -->
+  <div id="devModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-dev></div>
+    <div class="modal-card dev-card" role="dialog" aria-modal="true">
+      <button class="modal-close" data-close-dev aria-label="关闭">×</button>
+      <h2 class="dev-title" data-i18n="devTitle">开发者登录</h2>
+      <p class="dev-sub" data-i18n="devSub">用 Supabase 账号登录后审核照片</p>
+      <label class="dev-label"><span data-i18n="emailLabel">邮箱</span><input id="devEmail" type="email" name="dev-email" placeholder="you@example.com" class="dev-input" autocomplete="username" /></label>
+      <label class="dev-label"><span data-i18n="passwordLabel">密码</span><input id="devPass" type="password" name="dev-pass" placeholder="••••••••" class="dev-input" autocomplete="current-password" /></label>
+      <p class="dev-tip" id="devTip"></p>
+      <button id="devLogin" class="btn-primary" type="button" data-i18n="login">登录</button>
+      <p class="dev-hint" data-i18n="devNoAcct">没有账号？请先在 Supabase 后台 Authentication 里用同一邮箱注册一个账号（建议关闭邮件确认以便自测）。</p>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
