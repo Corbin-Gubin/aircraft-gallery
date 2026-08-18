@@ -969,6 +969,7 @@
     const mfr = en() ? (f.manufacturerEn || f.manufacturer) : f.manufacturer;
     const cty = en() ? (f.countryEn || f.country) : f.country;
     const cat = en() ? (f.categoryEn || f.category) : f.category;
+    dImg.classList.remove("loaded");            // 先隐藏旧图，避免切换机型时旧图残留
     dImg.src = cdn(f.image); dImg.alt = name; dImg.decoding = "async";
     dImg.dataset.fb = f.image;
     dImg.onload = function () { this.classList.add("loaded"); };
