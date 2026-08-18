@@ -900,11 +900,18 @@
     } catch (e) { APPROVED_CACHE = []; }
   }
 
+  // 图片走 jsDelivr CDN（国内通常有边缘节点，比 GitHub Pages 直连快）
+  const CDN_BASE = "https://cdn.jsdelivr.net/gh/Corbin-Gubin/aircraft-gallery@main/";
+  function cdn(path) {
+    if (!path || /^https?:/i.test(path)) return path; // 已是绝对地址（Supabase 等）原样返回
+    return CDN_BASE + String(path).replace(/^\.?\//, "");
+  }
   // 目录缩略图：用专门生成的 360px 小图，避免下载 1000px 原图
-  function thumbOf(img) {
+  function thumbRel(img) {
     if (!img) return img;
     return String(img).replace(/^images\//, "images/thumbs/");
   }
+  function thumbOf(img) { return cdn(thumbRel(img)); }
 
   function familyVariantIds(f) { return (f.variants || []).map((v) => v.id); }
   function photosForFamily(f) {
@@ -933,7 +940,7 @@
         const desc = en() ? (f.descEn || f.desc || "") : (f.desc || "");
         const countBadge = count > 0 ? `<span class="fam-count">${count}</span>` : "";
         return `<article class="fam-card" data-id="${f.id}" tabindex="0">
-            <div class="fam-thumb"><img src="${thumbOf(f.image)}" alt="${esc(name)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.style.display='none'" />${countBadge}</div>
+            <div class="fam-thumb"><img src="${thumbOf(f.image)}" data-fb="${esc(thumbRel(f.image))}" alt="${esc(name)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="if(this.dataset.fb){this.src=this.dataset.fb;this.dataset.fb='';}else{this.style.display='none'}" />${countBadge}</div>
             <div class="fam-body">
               <h3 class="fam-name">${esc(name)}</h3>
               <p class="fam-sub">${esc(mfr)} · ${esc(cty)} · ${esc(cat)}</p>
@@ -962,9 +969,10 @@
     const mfr = en() ? (f.manufacturerEn || f.manufacturer) : f.manufacturer;
     const cty = en() ? (f.countryEn || f.country) : f.country;
     const cat = en() ? (f.categoryEn || f.category) : f.category;
-    dImg.src = f.image; dImg.alt = name; dImg.decoding = "async";
+    dImg.src = cdn(f.image); dImg.alt = name; dImg.decoding = "async";
+    dImg.dataset.fb = f.image;
     dImg.onload = function () { this.classList.add("loaded"); };
-    dImg.onerror = function () { this.style.display = "none"; };
+    dImg.onerror = function () { if (this.dataset.fb) { this.src = this.dataset.fb; this.dataset.fb = ""; } else { this.style.display = "none"; } };
     if (dImg.complete && dImg.naturalWidth) dImg.classList.add("loaded");
     dImg.style.display = "";
     dName.textContent = name;
