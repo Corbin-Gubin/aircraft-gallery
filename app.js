@@ -579,7 +579,7 @@
     card.innerHTML = `
       <div class="card-img">
         ${badge}${actions}
-        <img src="${p.file}" alt="${esc(p.reg)}" onerror="this.parentElement.style.background='#22304a'" />
+        <img src="${p.file}" alt="${esc(p.reg)}" loading="lazy" decoding="async" onerror="this.parentElement.style.background='#22304a'" />
       </div>
       <div class="hangar-cap"><p class="h-reg">${esc(p.reg)}</p><p class="h-type">${esc(p.type || "未填写机型")}</p></div>`;
     const ap = card.querySelector(".approve");
@@ -597,7 +597,7 @@
     card.className = "card"; card.tabIndex = 0;
     card.innerHTML = `
       <div class="card-img">
-        <img src="${p.file}" alt="${esc(p.reg)}" onerror="this.parentElement.style.background='#22304a'" />
+        <img src="${p.file}" alt="${esc(p.reg)}" loading="lazy" decoding="async" onerror="this.parentElement.style.background='#22304a'" />
       </div>
       <div class="hangar-cap"><p class="h-reg">${esc(p.reg)}</p><p class="h-type">${esc(p.type || "未填写机型")}</p></div>`;
     card.addEventListener("click", () => openHangarModal(p));
@@ -900,6 +900,12 @@
     } catch (e) { APPROVED_CACHE = []; }
   }
 
+  // 目录缩略图：用专门生成的 360px 小图，避免下载 1000px 原图
+  function thumbOf(img) {
+    if (!img) return img;
+    return String(img).replace(/^images\//, "images/thumbs/");
+  }
+
   function familyVariantIds(f) { return (f.variants || []).map((v) => v.id); }
   function photosForFamily(f) {
     const ids = familyVariantIds(f);
@@ -927,7 +933,7 @@
         const desc = en() ? (f.descEn || f.desc || "") : (f.desc || "");
         const countBadge = count > 0 ? `<span class="fam-count">${count}</span>` : "";
         return `<article class="fam-card" data-id="${f.id}" tabindex="0">
-            <div class="fam-thumb"><img src="${f.image}" alt="${esc(name)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.style.display='none'" />${countBadge}</div>
+            <div class="fam-thumb"><img src="${thumbOf(f.image)}" alt="${esc(name)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.style.display='none'" />${countBadge}</div>
             <div class="fam-body">
               <h3 class="fam-name">${esc(name)}</h3>
               <p class="fam-sub">${esc(mfr)} · ${esc(cty)} · ${esc(cat)}</p>
