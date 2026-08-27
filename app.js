@@ -12,6 +12,16 @@
       brandSub: "按机型浏览客机资料与照片 · 支持上传投稿",
       navHome: "主页",
       navUpload: "上传图片",
+      navFav: "★ 收藏",
+      photoFav: "★ 我的收藏图片",
+      photoFavOn: "★ 已只看收藏",
+      photoFavEmpty: "还没有收藏的图片，去「推荐图片」点 ♥ 收藏吧 ✈️",
+      filterCat: "分类",
+      allCats: "全部",
+      favTitle: "我的收藏",
+      favEmpty: "还没有收藏的机型，去主页点 ♥ 收藏吧 ✈️",
+      themeDark: "🌙 暗色",
+      themeLight: "☀ 亮色",
       back: "← 返回机型列表",
       variantsTitle: "子型号",
       detailNoPhotos: "该机型暂无已通过审核的照片",
@@ -43,7 +53,7 @@
       submitReview: "提交审核",
       hangarEmpty: "还没有上传记录",
       footer: "访客上传的飞机照片经开发者审核通过后，会在「推荐图片」中公开推荐展示，供大家浏览欣赏。",
-      wikiLink: "查看维基百科详情 →",
+      wikiLink: "查看百度百科详情 →",
       mReject: "不通过（移至已拒绝）",
       devTitle: "开发者登录",
       devSub: "用 Supabase 账号登录后审核照片",
@@ -110,6 +120,16 @@
       brandSub: "Browse airliner profiles by type and upload your photos",
       navHome: "Home",
       navUpload: "Upload Photos",
+      navFav: "★ Favorites",
+      photoFav: "★ My Photos",
+      photoFavOn: "★ Showing Favorites",
+      photoFavEmpty: "No favorited photos yet — tap ♥ on a photo in 'Recommended Photos' ✈️",
+      filterCat: "Category",
+      allCats: "All",
+      favTitle: "My Favorites",
+      favEmpty: "No favorites yet — tap ♥ on the homepage to save one ✈️",
+      themeDark: "🌙 Dark",
+      themeLight: "☀ Light",
       back: "← Back to aircraft list",
       variantsTitle: "Variants",
       detailNoPhotos: "No approved photos for this aircraft yet",
@@ -141,7 +161,7 @@
       submitReview: "Submit for Review",
       hangarEmpty: "No uploads yet",
       footer: "Visitor-uploaded aircraft photos are publicly recommended in 'Recommended Photos' after developer approval.",
-      wikiLink: "View on Wikipedia →",
+      wikiLink: "View on Baidu Baike →",
       mReject: "Reject (move to Rejected)",
       devTitle: "Developer Login",
       devSub: "Log in with your Supabase account to review photos",
@@ -215,6 +235,54 @@
     return s === "approved" ? t("statusApproved") : s === "rejected" ? t("statusRejected") : t("statusPending");
   }
 
+  /* ============ 收藏（localStorage） ============ */
+  const FAV_KEY = "aircraft_favs";
+  let FAVS = (function () {
+    try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; }
+  })();
+  function saveFavs() { try { localStorage.setItem(FAV_KEY, JSON.stringify(FAVS)); } catch (e) {} }
+  function isFav(id) { return FAVS.indexOf(id) >= 0; }
+  function toggleFav(id) {
+    const i = FAVS.indexOf(id);
+    if (i >= 0) FAVS.splice(i, 1); else FAVS.push(id);
+    saveFavs();
+    return isFav(id);
+  }
+
+  /* ============ 图片收藏（按照片 id，localStorage） ============ */
+  const PHOTO_FAV_KEY = "aircraft_photo_favs";
+  let PHOTO_FAVS = (function () {
+    try { return JSON.parse(localStorage.getItem(PHOTO_FAV_KEY)) || []; } catch (e) { return []; }
+  })();
+  function savePhotoFavs() { try { localStorage.setItem(PHOTO_FAV_KEY, JSON.stringify(PHOTO_FAVS)); } catch (e) {} }
+  function isPhotoFav(id) { return PHOTO_FAVS.indexOf(id) >= 0; }
+  function togglePhotoFav(id) {
+    const i = PHOTO_FAVS.indexOf(id);
+    if (i >= 0) PHOTO_FAVS.splice(i, 1); else PHOTO_FAVS.push(id);
+    savePhotoFavs();
+    return isPhotoFav(id);
+  }
+
+  /* ============ 主题（亮/暗，localStorage） ============ */
+  const THEME_KEY = "aircraft_theme";
+  function applyTheme(theme) {
+    if (theme === "light") document.documentElement.setAttribute("data-theme", "light");
+    else document.documentElement.removeAttribute("data-theme");
+    const btn = document.getElementById("themeToggle");
+    if (btn) btn.textContent = (theme === "light") ? t("themeDark") : t("themeLight");
+  }
+  const themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+      applyTheme(next);
+    });
+  }
+
+  /* ============ 目录筛选状态 ============ */
+  const state = { cat: null, favOnly: false, photoFavOnly: false };
+
   /* ============ Supabase 客户端 ============ */
   const SB_URL = "https://kmvgarkjzassujmtwvpa.supabase.co";
   const SB_KEY = "sb_publishable__s5hElHdjvao1Ex98Kt_AQ_JH10mHX5";
@@ -244,6 +312,8 @@
     if (safetyEl) safetyEl.innerHTML = (en() ? t("safetyEn", { n: d }) : t("safetyZh", { n: d }))
       .replace(String(d), '<b id="safeDays">' + d + "</b>");
     if (langToggle) langToggle.textContent = en() ? "中文" : "English";
+    const tt = document.getElementById("themeToggle");
+    if (tt) tt.textContent = (document.documentElement.getAttribute("data-theme") === "light") ? t("themeDark") : t("themeLight");
   }
   if (langToggle) langToggle.addEventListener("click", () => {
     LANG = en() ? "zh" : "en";
@@ -366,6 +436,8 @@
   /* ============ 机型详情弹窗（当前未直接调用，保留英文支持） ============ */
   function openModal(a) {
     document.getElementById("mWiki").style.display = "";
+    const mFavPhoto = document.getElementById("mFavPhoto");
+    if (mFavPhoto) mFavPhoto.hidden = true;
     document.getElementById("mImg").src = a.image;
     document.getElementById("mImg").alt = en() ? (a.nameEn || a.name) : a.name;
     document.getElementById("mName").textContent = en() ? (a.nameEn || a.name) : a.name;
@@ -439,6 +511,17 @@
       };
     } else {
       mDevActions.hidden = true;
+    }
+    // 图片收藏 ♥（弹窗内）
+    const mFavPhoto = document.getElementById("mFavPhoto");
+    if (mFavPhoto) {
+      mFavPhoto.hidden = false;
+      mFavPhoto.classList.toggle("on", isPhotoFav(rec.id));
+      mFavPhoto.onclick = () => {
+        const on = togglePhotoFav(rec.id);
+        mFavPhoto.classList.toggle("on", on);
+        if (state.photoFavOnly) renderRecommend();
+      };
     }
     modal.hidden = false;
     document.body.style.overflow = "hidden";
@@ -595,11 +678,20 @@
   function recCard(p) {
     const card = document.createElement("article");
     card.className = "card"; card.tabIndex = 0;
+    const pfOn = isPhotoFav(p.id) ? " on" : "";
     card.innerHTML = `
       <div class="card-img">
+        <button class="card-fav${pfOn}" data-fav-photo="${esc(p.id)}" type="button" aria-label="收藏图片">♥</button>
         <img src="${p.file}" alt="${esc(p.reg)}" loading="lazy" decoding="async" onerror="this.parentElement.style.background='#22304a'" />
       </div>
       <div class="hangar-cap"><p class="h-reg">${esc(p.reg)}</p><p class="h-type">${esc(p.type || "未填写机型")}</p></div>`;
+    const pf = card.querySelector(".card-fav");
+    if (pf) pf.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const on = togglePhotoFav(p.id);
+      pf.classList.toggle("on", on);
+      if (state.photoFavOnly) renderRecommend(); // 取消收藏时即时从收藏视图移除
+    });
     card.addEventListener("click", () => openHangarModal(p));
     card.addEventListener("keydown", (e) => { if (e.key === "Enter") openHangarModal(p); });
     return card;
@@ -667,12 +759,15 @@
     if (!recGrid) return;
     const kw = (regSearch ? regSearch.value : "").trim().toLowerCase();
     let approved = APPROVED_CACHE.slice();
+    if (state.photoFavOnly) approved = approved.filter((p) => isPhotoFav(p.id));
     if (kw) approved = approved.filter((p) => (p.reg + " " + (p.type || "") + " " + (p.note || "") + " " + (p.matched_name || "")).toLowerCase().includes(kw));
     recCount.textContent = t("recCount", { n: approved.length });
     recGrid.innerHTML = "";
     recEmpty.hidden = approved.length > 0;
-    recEmpty.querySelector("p").textContent = isDev() ? t("recEmptyDev") : t("recEmptyGuest");
-    if (!approved.length) return;
+    if (!approved.length) {
+      recEmpty.querySelector("p").textContent = state.photoFavOnly ? t("photoFavEmpty") : (isDev() ? t("recEmptyDev") : t("recEmptyGuest"));
+      return;
+    }
     approved.forEach((p) => recGrid.appendChild(recCard(p)));
   }
 
@@ -922,9 +1017,36 @@
   function renderCatalog() {
     if (!catalog) return;
     if (!FAMILIES || !FAMILIES.length) { catalog.innerHTML = ""; return; }
+
+    // 分类筛选 chips（始终基于全部家族，便于切换）
+    renderCatChips();
+
+    // 按状态筛选家族
+    let list = FAMILIES.slice();
+    if (state.favOnly) list = list.filter((f) => isFav(f.id));
+    if (state.cat) {
+      list = list.filter((f) => (en() ? (f.categoryEn || f.category) : f.category) === state.cat);
+    }
+
+    // 收藏视图的提示横幅
+    const favBanner = document.getElementById("favBanner");
+    if (favBanner) {
+      if (state.favOnly) {
+        favBanner.hidden = false;
+        if (list.length === 0) {
+          favBanner.innerHTML = '<div class="fav-banner-head">' + t("favTitle") + '</div><p class="fav-banner-empty">' + t("favEmpty") + "</p>";
+        } else {
+          favBanner.innerHTML = '<div class="fav-banner-head">' + t("favTitle") + " · " + list.length + "</div>";
+        }
+      } else {
+        favBanner.hidden = true;
+      }
+    }
+
+    // 按分类分组（仅显示筛选后还剩的家族）
     const groups = [];
     const map = {};
-    FAMILIES.forEach((f) => {
+    list.forEach((f) => {
       const key = en() ? (f.categoryEn || f.category) : f.category;
       if (!map[key]) { map[key] = []; groups.push(key); }
       map[key].push(f);
@@ -938,9 +1060,15 @@
         const cty = en() ? (f.countryEn || f.country) : f.country;
         const cat = en() ? (f.categoryEn || f.category) : f.category;
         const desc = en() ? (f.descEn || f.desc || "") : (f.desc || "");
+        const favOn = isFav(f.id) ? " on" : "";
         const countBadge = count > 0 ? `<span class="fam-count">${count}</span>` : "";
         return `<article class="fam-card" data-id="${f.id}" tabindex="0">
-            <div class="fam-thumb"><img src="${thumbOf(f.image)}" data-fb="${esc(thumbRel(f.image))}" alt="${esc(name)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="if(this.dataset.fb){this.src=this.dataset.fb;this.dataset.fb='';}else{this.style.display='none'}" />${countBadge}</div>
+            <div class="fam-thumb">
+              <img src="${thumbOf(f.image)}" data-fb="${esc(thumbRel(f.image))}" alt="${esc(name)}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="if(this.dataset.fb){this.src=this.dataset.fb;this.dataset.fb='';}else{this.style.display='none';this.nextElementSibling.hidden=false;}" />
+              <div class="fam-ph" hidden><div class="ph-plane">✈</div><span>${esc(name)}</span></div>
+              <button class="fav-btn${favOn}" data-fav="${f.id}" type="button" aria-label="收藏">♥</button>
+              ${countBadge}
+            </div>
             <div class="fam-body">
               <h3 class="fam-name">${esc(name)}</h3>
               <p class="fam-sub">${esc(mfr)} · ${esc(cty)} · ${esc(cat)}</p>
@@ -958,8 +1086,38 @@
       const f = FAMILIES.find((x) => x.id === cardEl.dataset.id);
       cardEl.addEventListener("click", () => openFamilyDetail(f));
       cardEl.addEventListener("keydown", (e) => { if (e.key === "Enter") openFamilyDetail(f); });
+      const fb = cardEl.querySelector(".fav-btn");
+      if (fb) fb.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const on = toggleFav(f.id);
+        fb.classList.toggle("on", on);
+        if (state.favOnly) renderCatalog(); // 取消收藏时即时从收藏视图移除
+      });
     });
     catalog.querySelectorAll(".fam-thumb img").forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add("loaded"); });
+  }
+
+  function renderCatChips() {
+    const wrap = document.getElementById("catChips");
+    if (!wrap) return;
+    const seen = {};
+    const cats = [];
+    FAMILIES.forEach((f) => {
+      const key = en() ? (f.categoryEn || f.category) : f.category;
+      if (!seen[key]) { seen[key] = true; cats.push(key); }
+    });
+    const allLabel = t("allCats");
+    const items = [{ key: "", label: allLabel }].concat(cats.map((c) => ({ key: c, label: c })));
+    wrap.innerHTML = items.map((it) => {
+      const active = (state.cat || "") === it.key ? " active" : "";
+      return `<button class="chip${active}" data-cat="${esc(it.key)}" type="button">${esc(it.label)}</button>`;
+    }).join("");
+    wrap.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        state.cat = chip.dataset.cat || null;
+        renderCatalog();
+      });
+    });
   }
 
   function openFamilyDetail(f) {
@@ -980,6 +1138,15 @@
     dSub.textContent = mfr + " · " + cty + " · " + cat;
     dDesc.textContent = en() ? (f.descEn || f.desc || "") : (f.desc || "");
     dWiki.href = f.wiki || "#";
+    // 收藏按钮（机型详情页）
+    const dFav = document.getElementById("dFavBtn");
+    if (dFav) {
+      dFav.classList.toggle("on", isFav(f.id));
+      dFav.onclick = function () {
+        const on = toggleFav(f.id);
+        dFav.classList.toggle("on", on);
+      };
+    }
     // 子型号
     dVariants.innerHTML = (f.variants || []).map((v) => {
       const vname = en() ? (v.nameEn || v.name) : v.name;
@@ -1037,10 +1204,37 @@
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  navBtns.forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
+  const favToggleBtn = document.getElementById("favToggle");
+  if (favToggleBtn) favToggleBtn.addEventListener("click", () => {
+    state.favOnly = !state.favOnly;
+    state.cat = null;
+    favToggleBtn.classList.toggle("active", state.favOnly);
+    showView("home");
+  });
+
+  const photoFavToggle = document.getElementById("photoFavToggle");
+  if (photoFavToggle) photoFavToggle.addEventListener("click", () => {
+    state.photoFavOnly = !state.photoFavOnly;
+    photoFavToggle.classList.toggle("active", state.photoFavOnly);
+    photoFavToggle.textContent = state.photoFavOnly ? t("photoFavOn") : t("photoFav");
+    renderRecommend();
+  });
+  navBtns.forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.view === "home") { state.cat = null; state.favOnly = false; if (favToggleBtn) favToggleBtn.classList.remove("active"); }
+    showView(b.dataset.view);
+  }));
 
   /* ============ 初始化 ============ */
   applyI18n();
+  // 应用主题（亮/暗）
+  (function () {
+    let saved = "dark";
+    try { saved = localStorage.getItem(THEME_KEY) || "dark"; } catch (e) {}
+    applyTheme(saved);
+  })();
+  // 显示分类筛选条
+  const catFilterEl = document.getElementById("catFilter");
+  if (catFilterEl) catFilterEl.hidden = false;
   // 默认访客模式：每次打开都从「访客」开始，开发者模式需手动登录才进入
   currentUser = null;
   applyDevUI();
