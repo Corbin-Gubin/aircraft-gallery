@@ -23,6 +23,7 @@
         </div>
 
         <div class="hero-actions">
+          <button class="lang-toggle" id="themeToggle" type="button" title="切换亮/暗主题">☀ 亮色</button>
           <button class="lang-toggle" id="langToggle" type="button" title="切换语言">English</button>
           <button class="dev-entry" id="devEntry" type="button" data-i18n="devEntry">开发者登录</button>
         </div>
@@ -30,6 +31,7 @@
 
       <nav class="main-nav" id="mainNav">
         <button class="nav-btn active" data-view="home" type="button" data-i18n="navHome">主页</button>
+        <button class="nav-fav-btn" id="favToggle" type="button" data-i18n="navFav">★ 收藏</button>
         <button class="nav-btn" data-view="upload" type="button" data-i18n="navUpload">上传图片</button>
       </nav>
     </div>
@@ -39,6 +41,13 @@
 
     <!-- ===== 主页：机型目录 ===== -->
     <section id="view-home" class="view">
+      <div id="catFilter" class="filters" hidden>
+        <div class="filter-group">
+          <span class="filter-label" data-i18n="filterCat">分类</span>
+          <div class="chips" id="catChips"></div>
+        </div>
+      </div>
+      <div id="favBanner" class="fav-banner" hidden></div>
       <div id="catalog" class="catalog"></div>
     </section>
 
@@ -141,6 +150,7 @@
           <h2 data-i18n="recTitle">推荐图片</h2>
           <span id="recCount" class="rec-count">共 0 张推荐</span>
           <span class="rec-sub" data-i18n="recSub">已通过审核的优质照片</span>
+          <button class="photo-fav-toggle" id="photoFavToggle" type="button" data-i18n="photoFav">★ 我的收藏图片</button>
         </div>
         <div id="recGrid" class="grid"></div>
         <div id="recEmpty" class="empty" hidden><p>还没有推荐的照片</p></div>
@@ -153,7 +163,10 @@
       <div class="detail-head">
         <img id="dImg" class="detail-img" alt="" />
         <div class="detail-meta">
-          <h2 id="dName"></h2>
+          <div class="detail-title-row">
+            <h2 id="dName"></h2>
+            <button class="fav-btn-detail" id="dFavBtn" type="button" aria-label="收藏">♥</button>
+          </div>
           <p id="dSub" class="m-sub"></p>
           <p id="dDesc" class="m-desc"></p>
           <a id="dWiki" class="wiki-link" target="_blank" rel="noopener" data-i18n="wikiLink">查看维基百科详情 →</a>
@@ -190,6 +203,7 @@
         <div class="modal-head">
           <h2 id="mName"></h2>
           <span id="mCat" class="tag"></span>
+          <button class="card-fav modal-fav" id="mFavPhoto" type="button" hidden aria-label="收藏图片">♥</button>
         </div>
         <p id="mModel" class="m-model"></p>
         <p id="mDesc" class="m-desc"></p>
@@ -219,6 +233,7 @@
   </div>
 
   <script src="data.js"></script>
+  <script src="data-military.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
