@@ -386,7 +386,24 @@
     sb.auth.signInWithPassword({ email: devEmail.value.trim(), password: devPass.value })
       .then(({ error }) => {
         if (error) {
-          devTip.textContent = t("loginCredErr");
+          // 输出真实原因，便于定位（不再一律显示「邮箱或密码不正确」）
+          const raw = String(error.message || error.code || "");
+          console.error("[dev login failed]", raw);
+          let tip = t("loginCredErr");
+          if (/not.?confirm/i.test(raw)) {
+            tip = en()
+              ? "Email not confirmed: go to Supabase → Authentication → Users and confirm this user (or turn OFF 'Confirm email' in Providers → Email)."
+              : "邮箱还没验证：请到 Supabase → Authentication → Users，把这个用户标记为已确认；或在 Providers → Email 里关闭「Confirm email」。";
+          } else if (/too many|rate.?limit/i.test(raw)) {
+            tip = en() ? "Too many attempts. Wait about a minute and try again." : "尝试次数太多，请等约 1 分钟后再试。";
+          } else if (/invalid|credential|user/i.test(raw)) {
+            tip = en()
+              ? "Wrong email or password. This email must exist under Supabase → Authentication → Users (project kmvgarkjzassujmtwvpa), and the password must be set there."
+              : "邮箱或密码不对：这个邮箱必须存在于 Supabase（项目 kmvgarkjzassujmtwvpa）→ Authentication → Users 里，且密码要在那里设置。";
+          } else {
+            tip = (en() ? "Login failed: " : "登录失败：") + raw;
+          }
+          devTip.textContent = tip;
           devTip.className = "dev-tip err";
           devLogin.textContent = t("retry");
           devLogin.disabled = false;
